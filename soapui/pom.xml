@@ -94,6 +94,7 @@
                     <arguments>
                         <argument>-classpath</argument>
                         <classpath/>
+                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argument>
                         <argument>com.eviware.soapui.SoapUI</argument>
                     </arguments>
                 </configuration>
