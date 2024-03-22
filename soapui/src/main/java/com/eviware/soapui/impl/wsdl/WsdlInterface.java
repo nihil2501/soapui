@@ -636,6 +636,10 @@ public class WsdlInterface extends AbstractInterface<WsdlInterfaceConfig> {
         return new ArrayList<Operation>(operations);
     }
 
+    public List<WsdlOperation> getWsdlOperations() {
+        return operations;
+    }
+
     public static class BindingTuple {
         public WsdlContext context = null;
         public Service service = null;

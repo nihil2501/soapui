@@ -129,6 +129,12 @@ public class WsdlOperation extends AbstractWsdlModelItem<OperationConfig> implem
         }
     }
 
+    public void addRequest(String name, boolean buildOptional) {
+        WsdlRequest request = addNewRequest(name);
+        String requestContent = createRequest(buildOptional);
+        request.setRequestContent(requestContent);
+    }
+
     public WsdlRequest addNewRequest(String name) {
         WsdlRequest requestImpl = new WsdlRequest(this, getConfig().addNewCall());
         requestImpl.setName(name);

@@ -1,17 +1,17 @@
 /*
  * SoapUI, Copyright (C) 2004-2022 SmartBear Software
  *
- * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent 
- * versions of the EUPL (the "Licence"); 
- * You may not use this work except in compliance with the Licence. 
- * You may obtain a copy of the Licence at: 
- * 
- * http://ec.europa.eu/idabc/eupl 
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the Licence is 
- * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
- * express or implied. See the Licence for the specific language governing permissions and limitations 
- * under the Licence. 
+ * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent
+ * versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Licence for the specific language governing permissions and limitations
+ * under the Licence.
  */
 
 package com.eviware.soapui.impl;
@@ -26,6 +26,8 @@ import com.eviware.soapui.impl.wsdl.WsdlInterface;
 import com.eviware.soapui.impl.wsdl.WsdlOperation;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.WsdlRequest;
+import com.eviware.soapui.impl.wsdl.mock.WsdlMockService;
+import com.eviware.soapui.impl.wsdl.support.PathUtils;
 import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlImporter;
 import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlLoader;
 import com.eviware.soapui.model.propertyexpansion.DefaultPropertyExpansionContext;
@@ -56,6 +58,30 @@ public class WsdlInterfaceFactory implements InterfaceFactory<WsdlInterface> {
         iface.setName(name);
 
         return iface;
+    }
+
+    public static WsdlInterface[] fullyImportWsdl(WsdlProject project, String url) throws Exception {
+        PropertyExpansionContext context = new DefaultPropertyExpansionContext(project.getModelItem());
+        String expUrl = PropertyExpander.expandProperties(context, PathUtils.expandPath(url, project));
+        WsdlInterface[] results =  WsdlImporter.importWsdl(project, expUrl);
+
+        if (results != null) {
+            for (WsdlInterface iface : results) {
+                WsdlMockService mockService = project.addNewMockService(iface.getName() + " MockService");
+                mockService.setPath("/mock" + iface.getName());
+                mockService.setPort(8088);
+
+                iface.setDefinition(url, false);
+                iface.addEndpoint(mockService.getLocalEndpoint());
+
+                for (WsdlOperation operation : iface.getWsdlOperations()) {
+                    operation.addRequest("Request  1", true);
+                    mockService.addNewMockOperationResponse("Response 1", operation);
+                }
+            }
+        }
+
+        return results;
     }
 
     public static WsdlInterface[] importWsdl(WsdlProject project, String url, boolean createRequests)
