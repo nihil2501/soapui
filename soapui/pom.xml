@@ -90,7 +90,12 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.eviware.soapui.SoapUI</mainClass>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>com.eviware.soapui.SoapUI</argument>
+                    </arguments>
                 </configuration>
             </plugin>
         </plugins>
