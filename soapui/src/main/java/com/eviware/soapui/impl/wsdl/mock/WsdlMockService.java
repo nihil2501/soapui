@@ -107,15 +107,8 @@ public class WsdlMockService extends AbstractMockService<WsdlMockOperation, Mock
         return null;
     }
 
-
-    public WsdlMockResponse addNewMockOperationResponse(String name, WsdlOperation operation) {
-        WsdlMockOperation mockOperation = addNewMockOperation(operation);
-        WsdlMockResponse response = mockOperation.addNewMockResponse(name, true);
-        return response;
-    }
-
     @Override
-    public WsdlMockOperation addNewMockOperation(Operation operation) {
+    public MockOperation addNewMockOperation(Operation operation) {
         if (getMockOperation(operation) != null) {
             return null;
         }
