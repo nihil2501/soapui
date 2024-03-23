@@ -26,8 +26,6 @@ import com.eviware.soapui.impl.wsdl.WsdlInterface;
 import com.eviware.soapui.impl.wsdl.WsdlOperation;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.WsdlRequest;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockResponse;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockService;
 import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlImporter;
 import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlLoader;
 import com.eviware.soapui.model.propertyexpansion.DefaultPropertyExpansionContext;
@@ -43,10 +41,6 @@ import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 
 public class WsdlInterfaceFactory implements InterfaceFactory<WsdlInterface> {
     public final static String WSDL_TYPE = "wsdl";
@@ -62,51 +56,6 @@ public class WsdlInterfaceFactory implements InterfaceFactory<WsdlInterface> {
         iface.setName(name);
 
         return iface;
-    }
-
-    public static void fullyImportWsdls(String directory) throws Exception {
-        WsdlProject project = new WsdlProject();
-
-        Path directoryPath = Paths.get(directory);
-        Path wsdlsPath = directoryPath.resolve("wsdl-urls");
-        List<String> urls = Files.readAllLines(wsdlsPath);
-
-        for (String url : urls) {
-            WsdlInterface[] results;
-
-            try {
-                results = WsdlImporter.importWsdl(project, url);
-            } catch (Exception e) {
-                System.err.println("Error importing WSDL from " + url + ": " + e.getMessage());
-                continue;
-            }
-
-            if (results != null) {
-                Path wsdlPath = directoryPath.resolve(new URI(url).getPath().substring(1));
-
-                for (WsdlInterface iface : results) {
-                    WsdlMockService mockService = project.addNewMockService(iface.getName() + " MockService");
-                    mockService.setPath("/mock" + iface.getName());
-                    mockService.setPort(8088);
-
-                    iface.setDefinition(url, false);
-                    iface.addEndpoint(mockService.getLocalEndpoint());
-
-                    Path portBindingPath = wsdlPath.resolve(iface.getName());
-
-                    for (WsdlOperation operation : iface.getWsdlOperations()) {
-                        Path operationPath = portBindingPath.resolve(operation.getName());
-                        Files.createDirectories(operationPath);
-
-                        WsdlRequest request = operation.addRequest("Request  1");
-                        Files.write(operationPath.resolve("request.xml"), request.getRequestContent().getBytes());
-
-                        WsdlMockResponse response = mockService.addNewMockOperationResponse("Response 1", operation);
-                        Files.write(operationPath.resolve("response.xml"), response.getResponseContent().getBytes());
-                    }
-                }
-            }
-        }
     }
 
     public static WsdlInterface[] importWsdl(WsdlProject project, String url, boolean createRequests)
