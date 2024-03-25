@@ -19,10 +19,19 @@ import java.util.List;
 
 class WsdlInterfaceFactoryTest {
     @Test
-    void buildCatalogFromWsdlUrls() throws Exception {
+    void saveCatalogFromWsdlUrls() throws Exception {
+        buildCatalogFromWsdlUrls(true);
+    }
+
+    @Test
+    void trialCatalogFromWsdlUrls() throws Exception {
+        buildCatalogFromWsdlUrls(false);
+    }
+
+    private void buildCatalogFromWsdlUrls(boolean shouldSave) throws Exception {
         WsdlProject project = new WsdlProject();
 
-        Path directoryPath = Paths.get("/path/to/bgs-catalog");
+        Path directoryPath = Paths.get("/Users/oren.mittman/src/work/bgs-catalog");
         Path wsdlsPath = directoryPath.resolve("wsdl-urls");
         List<String> urls = Files.readAllLines(wsdlsPath);
 
@@ -51,27 +60,28 @@ class WsdlInterfaceFactoryTest {
 
                     for (Operation operation : wsdlInterface.getOperationList()) {
                         Path operationPath = portBindingPath.resolve(operation.getName());
-                        Files.createDirectories(operationPath);
+                        WsdlRequest request = addRequest((WsdlOperation) operation);
+                        WsdlMockResponse response = addNewMockOperationResponse(mockService, (WsdlOperation) operation);
 
-                        WsdlRequest request = addRequest((WsdlOperation) operation, "Request  1");
-                        Files.write(operationPath.resolve("request.xml"), request.getRequestContent().getBytes());
-
-                        WsdlMockResponse response = addNewMockOperationResponse(mockService, "Response 1", (WsdlOperation) operation);
-                        Files.write(operationPath.resolve("response.xml"), response.getResponseContent().getBytes());
+                        if (shouldSave) {
+                            Files.createDirectories(operationPath);
+                            Files.write(operationPath.resolve("request.xml"), request.getRequestContent().getBytes());
+                            Files.write(operationPath.resolve("response.xml"), response.getResponseContent().getBytes());
+                        }
                     }
                 }
             }
         }
     }
 
-    public WsdlRequest addRequest(WsdlOperation operation, String name) {
-        WsdlRequest request = operation.addNewRequest(name);
+    private WsdlRequest addRequest(WsdlOperation operation) {
+        WsdlRequest request = operation.addNewRequest("Request  1");
         request.setRequestContent(operation.createRequest(true));
         return request;
     }
 
-    public WsdlMockResponse addNewMockOperationResponse(WsdlMockService service, String name, WsdlOperation operation) {
+    private WsdlMockResponse addNewMockOperationResponse(WsdlMockService service, WsdlOperation operation) {
         WsdlMockOperation mockOperation = (WsdlMockOperation) service.addNewMockOperation(operation);
-        return mockOperation.addNewMockResponse(name, true);
+        return mockOperation.addNewMockResponse("Response 1", true);
     }
 }
